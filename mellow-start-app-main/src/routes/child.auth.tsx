@@ -17,7 +17,7 @@ function ChildAuth() {
   const navigate = useNavigate();
   const [screen, setScreen] = useState<Screen>("welcome");
   const [mobile, setMobile] = useState("");
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [otp, setOtp] = useState<string[]>([]);
   const [otpSent, setOtpSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [timer, setTimer] = useState(30);
@@ -36,6 +36,9 @@ function ChildAuth() {
     if (profile) {
       setScreen("welcome");
     }
+    const isLoggedOut = localStorage.getItem("kartavya_logged_out") === "true";
+    const len = isLoggedOut ? 4 : 6;
+    setOtp(Array(len).fill(""));
   }, [navigate]);
 
   useEffect(() => {
@@ -57,7 +60,9 @@ function ChildAuth() {
     }
     setOtpSent(true);
     setTimer(30);
-    setOtp(["", "", "", "", "", ""]);
+    const isLoggedOut = localStorage.getItem("kartavya_logged_out") === "true";
+    const len = isLoggedOut ? 4 : 6;
+    setOtp(Array(len).fill(""));
     setScreen("otp");
     // Auto-focus first OTP field after transition
     setTimeout(() => otpRefs.current[0]?.focus(), 100);
@@ -66,11 +71,13 @@ function ChildAuth() {
   const verifyOtp = () => {
     setError(null);
     const code = otp.join("");
-    if (code.length < 6) {
-      setError("Enter the 6-digit OTP");
+    const isLoggedOut = localStorage.getItem("kartavya_logged_out") === "true";
+    const len = isLoggedOut ? 4 : 6;
+    if (code.length < len) {
+      setError(`Enter the ${len}-digit OTP`);
       return;
     }
-    // Demo: any 6-digit OTP works
+    localStorage.removeItem("kartavya_logged_out");
     localStorage.setItem("kartavya_session", "child");
     navigate({ to: "/child/dashboard" });
   };
@@ -81,14 +88,17 @@ function ChildAuth() {
     next[idx] = digit;
     setOtp(next);
     setError(null);
-    if (digit && idx < 5) {
+    const isLoggedOut = localStorage.getItem("kartavya_logged_out") === "true";
+    const len = isLoggedOut ? 4 : 6;
+    if (digit && idx < len - 1) {
       otpRefs.current[idx + 1]?.focus();
     }
-    // Auto-verify when all 6 digits entered
-    if (idx === 5 && digit) {
-      const code = [...next.slice(0, 5), digit].join("");
-      if (code.length === 6) {
+    // Auto-verify when all digits entered
+    if (idx === len - 1 && digit) {
+      const code = [...next.slice(0, len - 1), digit].join("");
+      if (code.length === len) {
         setTimeout(() => {
+          localStorage.removeItem("kartavya_logged_out");
           localStorage.setItem("kartavya_session", "child");
           navigate({ to: "/child/dashboard" });
         }, 200);
@@ -105,7 +115,9 @@ function ChildAuth() {
   const resendOtp = () => {
     if (timer > 0) return;
     setTimer(30);
-    setOtp(["", "", "", "", "", ""]);
+    const isLoggedOut = localStorage.getItem("kartavya_logged_out") === "true";
+    const len = isLoggedOut ? 4 : 6;
+    setOtp(Array(len).fill(""));
     setError(null);
     setTimeout(() => otpRefs.current[0]?.focus(), 100);
   };
@@ -222,7 +234,7 @@ function ChildAuth() {
               </div>
               <h2 className="font-display text-3xl text-lav-dd">Verify OTP</h2>
               <p className="max-w-xs text-sm text-muted-foreground">
-                Enter the 6-digit code sent to <span className="font-semibold text-ink">+91 {mobile}</span>
+                Enter the {otp.length}-digit code sent to <span className="font-semibold text-ink">+91 {mobile}</span>
               </p>
             </div>
 
@@ -265,7 +277,14 @@ function ChildAuth() {
                   </button>
                 )}
                 <button
-                  onClick={() => { setScreen("mobile"); setOtpSent(false); setOtp(["", "", "", "", "", ""]); setError(null); }}
+                  onClick={() => {
+                    setScreen("mobile");
+                    setOtpSent(false);
+                    const isLoggedOut = localStorage.getItem("kartavya_logged_out") === "true";
+                    const len = isLoggedOut ? 4 : 6;
+                    setOtp(Array(len).fill(""));
+                    setError(null);
+                  }}
                   className="text-[11px] text-muted-foreground underline-offset-2 hover:underline"
                 >
                   Change mobile number

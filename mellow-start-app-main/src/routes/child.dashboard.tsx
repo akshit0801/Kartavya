@@ -8,7 +8,7 @@ import {
   Bell, Pill, Stethoscope, UserPlus, Phone, MessageCircle, Upload,
   FileText, Calendar, ChevronRight, Check, X, Send, Star, MapPin,
   Home, CalendarDays, FileBarChart, Sparkles, IdCard, Sun, Watch,
-  Download, Share2, Printer, Copy, ArrowLeft, Lock, QrCode, Mail, Smartphone, CreditCard,
+  Download, Share2, Printer, Copy, ArrowLeft, Lock, QrCode, Mail, Smartphone, CreditCard, Settings,
 } from "lucide-react";
 import { jsPDF } from "jspdf";
 
@@ -24,12 +24,43 @@ function ChildDashboard() {
   const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
   const [tab, setTab] = useState<Tab>("home");
 
+  // Settings Drawer states
+  const [showSettings, setShowSettings] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [profileName, setProfileName] = useState("Riya");
+  const [profileBio, setProfileBio] = useState("Daughter of Ramesh Ji. Managing his health records and companions.");
+  const [profileLanguage, setProfileLanguage] = useState("English");
+  const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(true);
+  const [isPrivacyEnabled, setIsPrivacyEnabled] = useState(true);
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
+
   useEffect(() => {
     const raw = localStorage.getItem("kartavya_child_profile");
-    setProfile(raw ? JSON.parse(raw) : null);
+    const parsed = raw ? JSON.parse(raw) : null;
+    setProfile(parsed);
+    if (parsed?.your_name) {
+      setProfileName(parsed.your_name.split(" ")[0]);
+    }
+    
     const session = localStorage.getItem("kartavya_session");
-    if (session !== "child") navigate({ to: "/" });
+    if (session !== "child") {
+      navigate({ to: "/" });
+      return;
+    }
+
+    const savedTheme = localStorage.getItem("kartavya_theme") || "light";
+    setTheme(savedTheme as "light" | "dark");
+    document.documentElement.classList.toggle("dark", savedTheme === "dark");
   }, [navigate]);
+
+  const handleToggleTheme = () => {
+    const nextTheme = theme === "light" ? "dark" : "light";
+    setTheme(nextTheme);
+    localStorage.setItem("kartavya_theme", nextTheme);
+    document.documentElement.classList.toggle("dark", nextTheme === "dark");
+  };
 
   const logout = () => {
     localStorage.removeItem("kartavya_session");
@@ -37,7 +68,7 @@ function ChildDashboard() {
   };
 
   const parentName = (profile?.parent_name as string) || "Mrs. Sunita Sharma";
-  const yourName = ((profile?.your_name as string) || "Riya").split(" ")[0];
+  const yourName = profileName;
 
   return (
     <div className="flex min-h-screen flex-col bg-background pb-20">
@@ -54,10 +85,11 @@ function ChildDashboard() {
             </h1>
           </div>
           <button
-            onClick={logout}
-            className="rounded-full bg-white/15 px-3 py-1.5 text-[11px] backdrop-blur transition hover:bg-white/25"
+            onClick={() => setShowSettings(true)}
+            className="rounded-full bg-white/15 p-2 text-white hover:bg-white/25 transition"
+            aria-label="Settings"
           >
-            Sign out
+            <Settings className="h-5 w-5" />
           </button>
         </div>
         <div className="mt-4 flex items-center gap-3 rounded-2xl bg-white/15 p-3 backdrop-blur">
@@ -82,6 +114,248 @@ function ChildDashboard() {
         {tab === "leisure" && <LeisureSection />}
         {tab === "healthid" && <HealthIdSection />}
       </div>
+
+      {/* Settings Drawer */}
+      {showSettings && (
+        <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xs animate-fade-in" onClick={() => setShowSettings(false)}>
+          <div
+            className="h-full w-4/5 max-w-sm bg-white text-ink border-l border-lav-l p-5 shadow-2xl overflow-y-auto flex flex-col justify-between animate-in slide-in-from-right duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="space-y-5">
+              {/* Drawer Top */}
+              <div className="flex items-center justify-between pb-3 border-b border-lav-l">
+                <h3 className="font-display text-lg font-bold text-lav-dd">Settings</h3>
+                <button onClick={() => setShowSettings(false)} className="rounded-full bg-lav-l p-1.5 text-lav-dd hover:bg-lav-l/80">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* User profile section */}
+              <div className="flex flex-col items-center text-center space-y-2 py-2">
+                <div className="h-16 w-16 rounded-full bg-lav-l flex items-center justify-center text-3xl border border-lav-d/20">
+                  👩
+                </div>
+                <div>
+                  <h4 className="font-bold text-base text-ink">{profileName}</h4>
+                  <p className="text-xs text-muted-foreground">{profileLanguage}</p>
+                </div>
+                <button
+                  onClick={() => setEditingProfile(!editingProfile)}
+                  className="text-xs font-semibold text-lav-d hover:underline"
+                >
+                  {editingProfile ? "Close Editor" : "Edit Profile"}
+                </button>
+              </div>
+
+              <hr className="border-lav-l" />
+
+              {/* Editing Profile Screen */}
+              {editingProfile ? (
+                <div className="space-y-3 p-3 bg-lav-l/40 rounded-2xl border border-lav-l">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-lav-dd">Edit Profile</h4>
+                  <div className="space-y-2.5">
+                    <div>
+                      <label className="text-[10px] font-bold text-muted-foreground uppercase">Name</label>
+                      <input
+                        value={profileName}
+                        onChange={(e) => setProfileName(e.target.value)}
+                        className="w-full rounded-xl border border-lav-l bg-white p-2 text-xs text-ink outline-none focus:border-lav-d"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-muted-foreground uppercase">Bio</label>
+                      <textarea
+                        value={profileBio}
+                        onChange={(e) => setProfileBio(e.target.value)}
+                        className="w-full rounded-xl border border-lav-l bg-white p-2 text-xs text-ink outline-none focus:border-lav-d"
+                        rows={2}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Dark Mode toggle */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-lg">{theme === "dark" ? "🌙" : "☀️"}</span>
+                      <div>
+                        <div className="text-xs font-semibold text-ink">Dark Mode</div>
+                        <div className="text-[9px] text-muted-foreground">Toggle app theme</div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleToggleTheme}
+                      className={`h-6 w-11 rounded-full p-0.5 transition-colors duration-200 cursor-pointer ${
+                        theme === "dark" ? "bg-lav-d" : "bg-lav-l"
+                      }`}
+                    >
+                      <div
+                        className={`h-5 w-5 rounded-full bg-white shadow transform transition-transform duration-200 ${
+                          theme === "dark" ? "translate-x-5" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Notifications toggle */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-lg">🔔</span>
+                      <div>
+                        <div className="text-xs font-semibold text-ink">Notifications</div>
+                        <div className="text-[9px] text-muted-foreground">Medication and appointments alerts</div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setIsNotificationsEnabled(!isNotificationsEnabled)}
+                      className={`h-6 w-11 rounded-full p-0.5 transition-colors duration-200 cursor-pointer ${
+                        isNotificationsEnabled ? "bg-emerald-500" : "bg-lav-l"
+                      }`}
+                    >
+                      <div
+                        className={`h-5 w-5 rounded-full bg-white shadow transform transition-transform duration-200 ${
+                          isNotificationsEnabled ? "translate-x-5" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Privacy settings */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-lg">🔒</span>
+                      <div>
+                        <div className="text-xs font-semibold text-ink">Privacy Settings</div>
+                        <div className="text-[9px] text-muted-foreground">Profile visibility & requests</div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setIsPrivacyEnabled(!isPrivacyEnabled)}
+                      className={`h-6 w-11 rounded-full p-0.5 transition-colors duration-200 cursor-pointer ${
+                        isPrivacyEnabled ? "bg-emerald-500" : "bg-lav-l"
+                      }`}
+                    >
+                      <div
+                        className={`h-5 w-5 rounded-full bg-white shadow transform transition-transform duration-200 ${
+                          isPrivacyEnabled ? "translate-x-5" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Language Selector */}
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-lg">🌐</span>
+                      <div className="text-xs font-semibold text-ink">Language / भाषा</div>
+                    </div>
+                    <select
+                      value={profileLanguage}
+                      onChange={(e) => setProfileLanguage(e.target.value)}
+                      className="w-full mt-1.5 rounded-xl border border-lav-l bg-white p-2.5 text-xs text-ink outline-none focus:border-lav-d"
+                    >
+                      <option value="English">English</option>
+                      <option value="हिंदी">हिंदी</option>
+                      <option value="Punjabi">Punjabi</option>
+                      <option value="Tamil">Tamil</option>
+                      <option value="Bengali">Bengali</option>
+                    </select>
+                  </div>
+
+                  {/* FAQ Accordion */}
+                  <div className="space-y-2">
+                    <div className="text-xs font-bold uppercase tracking-wider text-lav-dd pt-1">❓ FAQ & Help</div>
+                    <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                      {[
+                        { q: "How do I book a companion?", a: "Go to the Companions tab on bottom nav, select a companion, and click Request. Your request goes to Priya/family for approval." },
+                        { q: "How does SOS work?", a: "Pressing the red SOS button opens quick emergency options to dial Police, Ambulance, or alert Priya immediately." },
+                        { q: "How to link Aadhar?", a: "Aadhar verification is managed inside your Profile screen. Enter your details to retrieve verified badges." },
+                        { q: "How to add a parent?", a: "To add or configure a parent record, click the top dropdown on the Child Home screen to add and edit family profiles." }
+                      ].map((item, idx) => {
+                        const isExpanded = expandedFaq === idx;
+                        return (
+                          <div key={idx} className="border border-lav-l/60 rounded-xl overflow-hidden bg-lav-l/20">
+                            <button
+                              onClick={() => setExpandedFaq(isExpanded ? null : idx)}
+                              className="w-full text-left px-3 py-2 text-xs font-bold text-ink flex justify-between items-center"
+                            >
+                              <span>{item.q}</span>
+                              <span className="text-[10px]">{isExpanded ? "▲" : "▼"}</span>
+                            </button>
+                            {isExpanded && (
+                              <div className="px-3 pb-2 text-[11px] text-muted-foreground leading-relaxed border-t border-lav-l/20 pt-1.5">
+                                {item.a}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Contact Support details */}
+                  <div className="bg-lav-l/30 border border-lav-l p-3 rounded-2xl text-[11px] text-ink space-y-1">
+                    <div className="font-bold">📞 Contact Support</div>
+                    <div>Phone: <a href="tel:+919876543210" className="text-lav-d underline font-semibold">+91 98765 43210</a></div>
+                    <div>WhatsApp: <a href="https://wa.me/919876543210" className="text-emerald-700 underline font-semibold">Chat Support</a></div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Logout button area */}
+            <div className="pt-4 border-t border-lav-l space-y-2">
+              <button
+                onClick={() => alert("Thank you for rating Kartavya App!")}
+                className="w-full rounded-xl bg-lav-l text-lav-dd font-bold text-xs py-2 hover:bg-lav-l/80"
+              >
+                ⭐ Rate the App
+              </button>
+              <button
+                onClick={() => setShowLogoutConfirm(true)}
+                className="w-full rounded-xl bg-rose-50 border border-rose-200 text-rose-700 font-bold text-xs py-2.5 hover:bg-rose-100"
+              >
+                🚪 Sign out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Logout confirmation dialog */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs">
+          <div className="w-11/12 max-w-sm rounded-3xl bg-white border border-lav-l p-5 text-center space-y-4 shadow-2xl">
+            <div className="text-3xl">🚪</div>
+            <h3 className="font-display text-lg font-bold text-lav-dd">Confirm Logout</h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Are you sure you want to logout? You will need to verify with a 4-digit OTP next time you sign in.
+            </p>
+            <div className="flex gap-2.5 pt-2">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="flex-1 rounded-2xl bg-lav-l text-lav-dd font-bold text-xs py-3.5"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowLogoutConfirm(false);
+                  setShowSettings(false);
+                  localStorage.removeItem("kartavya_session");
+                  localStorage.setItem("kartavya_logged_out", "true");
+                  navigate({ to: "/" });
+                }}
+                className="flex-1 rounded-2xl bg-red-600 text-white font-bold text-xs py-3.5 shadow hover:bg-red-700"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 mx-auto flex max-w-[640px] items-center justify-around border-t border-lav-l bg-white/95 px-2 py-2 backdrop-blur">

@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ElderDashboardRouteImport } from './routes/elder.dashboard'
+import { Route as ElderAuthRouteImport } from './routes/elder.auth'
 import { Route as ChildRegisterRouteImport } from './routes/child.register'
 import { Route as ChildDashboardRouteImport } from './routes/child.dashboard'
 import { Route as ChildAuthRouteImport } from './routes/child.auth'
@@ -17,6 +19,16 @@ import { Route as ChildAuthRouteImport } from './routes/child.auth'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ElderDashboardRoute = ElderDashboardRouteImport.update({
+  id: '/elder/dashboard',
+  path: '/elder/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ElderAuthRoute = ElderAuthRouteImport.update({
+  id: '/elder/auth',
+  path: '/elder/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChildRegisterRoute = ChildRegisterRouteImport.update({
@@ -40,12 +52,16 @@ export interface FileRoutesByFullPath {
   '/child/auth': typeof ChildAuthRoute
   '/child/dashboard': typeof ChildDashboardRoute
   '/child/register': typeof ChildRegisterRoute
+  '/elder/auth': typeof ElderAuthRoute
+  '/elder/dashboard': typeof ElderDashboardRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/child/auth': typeof ChildAuthRoute
   '/child/dashboard': typeof ChildDashboardRoute
   '/child/register': typeof ChildRegisterRoute
+  '/elder/auth': typeof ElderAuthRoute
+  '/elder/dashboard': typeof ElderDashboardRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +69,34 @@ export interface FileRoutesById {
   '/child/auth': typeof ChildAuthRoute
   '/child/dashboard': typeof ChildDashboardRoute
   '/child/register': typeof ChildRegisterRoute
+  '/elder/auth': typeof ElderAuthRoute
+  '/elder/dashboard': typeof ElderDashboardRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/child/auth' | '/child/dashboard' | '/child/register'
+  fullPaths:
+    | '/'
+    | '/child/auth'
+    | '/child/dashboard'
+    | '/child/register'
+    | '/elder/auth'
+    | '/elder/dashboard'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/child/auth' | '/child/dashboard' | '/child/register'
-  id: '__root__' | '/' | '/child/auth' | '/child/dashboard' | '/child/register'
+  to:
+    | '/'
+    | '/child/auth'
+    | '/child/dashboard'
+    | '/child/register'
+    | '/elder/auth'
+    | '/elder/dashboard'
+  id:
+    | '__root__'
+    | '/'
+    | '/child/auth'
+    | '/child/dashboard'
+    | '/child/register'
+    | '/elder/auth'
+    | '/elder/dashboard'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,6 +104,8 @@ export interface RootRouteChildren {
   ChildAuthRoute: typeof ChildAuthRoute
   ChildDashboardRoute: typeof ChildDashboardRoute
   ChildRegisterRoute: typeof ChildRegisterRoute
+  ElderAuthRoute: typeof ElderAuthRoute
+  ElderDashboardRoute: typeof ElderDashboardRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -76,6 +115,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/elder/dashboard': {
+      id: '/elder/dashboard'
+      path: '/elder/dashboard'
+      fullPath: '/elder/dashboard'
+      preLoaderRoute: typeof ElderDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/elder/auth': {
+      id: '/elder/auth'
+      path: '/elder/auth'
+      fullPath: '/elder/auth'
+      preLoaderRoute: typeof ElderAuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/child/register': {
@@ -107,6 +160,8 @@ const rootRouteChildren: RootRouteChildren = {
   ChildAuthRoute: ChildAuthRoute,
   ChildDashboardRoute: ChildDashboardRoute,
   ChildRegisterRoute: ChildRegisterRoute,
+  ElderAuthRoute: ElderAuthRoute,
+  ElderDashboardRoute: ElderDashboardRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

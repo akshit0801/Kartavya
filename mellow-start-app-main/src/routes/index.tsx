@@ -17,12 +17,14 @@ export const Route = createFileRoute("/")({
 function Index() {
   const navigate = useNavigate();
 
-  // Daily-usage shortcut: if the user is logged in as a child, go straight to dashboard.
+  // Daily-usage shortcut: if the user is logged in, go straight to dashboard.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const session = localStorage.getItem("kartavya_session");
     if (session === "child") {
       navigate({ to: "/child/dashboard" });
+    } else if (session === "elder") {
+      navigate({ to: "/elder/dashboard" });
     }
   }, [navigate]);
 
@@ -46,17 +48,15 @@ function Index() {
             <span className="text-sm font-semibold">Son / Daughter</span>
             <span className="text-[11px] opacity-80">Manage parents' health</span>
           </Link>
-          <button
-            type="button"
-            disabled
-            className="flex cursor-not-allowed flex-col items-center gap-2 rounded-2xl p-5 text-white shadow-lg opacity-90"
+          <Link
+            to="/elder/auth"
+            className="flex flex-col items-center gap-2 rounded-2xl p-5 text-white shadow-lg transition-transform hover:scale-[1.02]"
             style={{ background: "linear-gradient(145deg, #B8881A, var(--yel-d))" }}
-            title="Coming soon"
           >
             <span className="text-3xl">🧓</span>
             <span className="text-sm font-semibold">I am the Elder</span>
             <span className="text-[11px] opacity-80">Large, simple experience</span>
-          </button>
+          </Link>
         </div>
         <p className="pt-2 text-[11px] text-muted-foreground">
           Secured with OTP · ABHA linked
